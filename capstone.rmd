@@ -1,0 +1,56 @@
+---
+title: "capstone"
+author: "Drew Hall"
+date: "July 8, 2018"
+output: html_document
+---
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+dataset_Facebook <- read_csv("~/Projects/dataset_Facebook.csv")
+View(dataset_Facebook)
+```
+
+```{r dataset_Facebook}
+capstone <- dataset_Facebook
+```
+Getting a feel for the data.
+```{r}
+head(capstone)
+dim(capstone)
+
+lapply(capstone, class)
+
+summary (capstone)
+```
+Cleaning the data, and getting rid of the NAs
+```{r}
+capstone <- na.omit(capstone)
+which(is.na(capstone),arr.ind = TRUE)
+```
+Preprocessing..
+```{r}
+library(caret)
+preProcValues <- preProcess(capstone, method = c("center", "scale"))
+```
+I'll be fixing this up soon.
+```{r}
+ggplot(capstone, aes(x =`Post Month`, y =`Post Weekday`, col = Paid )) + geom_histogram()
+
+trying to see which month and days were correlated with getting paid
+plot(capstone$`Post Month`,capstone$`Post Weekday`, col = capstone$Paid)
+plot(capstone$`Post Weekday`,capstone$`Post Month`, col = capstone$Paid)
+
+breaking it down to the hour
+plot(capstone$`Post Hour`,capstone$`Post Weekday`, col = capstone$Paid)
+
+Just using total likes as a base for getting paid from either: comment, like or share.
+plot(capstone$`Page total likes`,capstone$comment, col = capstone$Paid)
+plot(capstone$`Page total likes`,capstone$like, col = capstone$Paid)
+plot(capstone$`Page total likes`,capstone$share, col = capstone$Paid)
+
+```
+
