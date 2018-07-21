@@ -34,23 +34,72 @@ which(is.na(capstone),arr.ind = TRUE)
 Preprocessing..
 ```{r}
 library(caret)
+library(lattice)
 preProcValues <- preProcess(capstone, method = c("center", "scale"))
+trainTransformed <- predict(preProcValues, capstone)
 ```
+
+```{r}
+idxTrain <- sample(seq(1,nrow(capstone), 0.70* nrow(capstone) ,replace = FALSE)) 
+idxTest <- setdiff(seq(1,nrow(capstone),idxTrain)
+trainX <- inputData[,-8][idxTrain, ]
+testX <- inputData[idxTest,-`Lifetime Post Consumers`]
+testY <- inputData[,8][idxTest]
+trainY <- inputData[,8][idxTrain]
+
+```
+
+
+
+```{r}
+x <- subset(capstone, select = -`Lifetime Post Consumers`)
+y <-capstone$`Lifetime Post Consumers`
+```
+
+```{r}
+library("e1071")
+svm_model <- svm(`Lifetime Post Consumers` ~ ., data = capstone)
+summary(svm_model)
+```
+
+```{r}
+pred <- predict(svm_model, x)
+system.time(pred <- predict(svm_model, x))
+
+table(pred, y)
+```
+
+```{r}
+svm_tune <- tune(svm, train.x = x, train.y = y,
+                 kernel = "radial", ranges = list(cost =10^(-1:2), gamma = c(.5, 1, 2)))
+
+print(svm_tune)
+```
+
+```{r}
+svm_model_after_tune <- svm(`Lifetime Post Consumers` ~ ., data = capstone, kernel = "radial", cost = 1, gamma = 0.5)
+
+summary(svm_model_after_tune)
+```
+
+```{r}
+pred <- predict(svm_model_after_tune, x)
+system.time(predict(svm_model_after_tune, x))
+```
+
+```{r}
+table(pred, y)
+```
+
+
 I'll be fixing this up soon.
 ```{r}
-ggplot(capstone, aes(x =`Post Month`, y =`Post Weekday`, col = Paid )) + geom_histogram()
+ggplot(capstone, aes(x =`Lifetime Post Consumers`, y =`Post Weekday`, col = Paid )) + geom_histogram()
 
-trying to see which month and days were correlated with getting paid
-plot(capstone$`Post Month`,capstone$`Post Weekday`, col = capstone$Paid)
-plot(capstone$`Post Weekday`,capstone$`Post Month`, col = capstone$Paid)
+ggplot(capstone, aes(x =`Lifetime Post Consumers`, y =`Post Weekday`, col = Paid )) + geom_plot()
 
-breaking it down to the hour
-plot(capstone$`Post Hour`,capstone$`Post Weekday`, col = capstone$Paid)
+ggplot(capstone, aes(x =`Lifetime Post Consumers`, y =`Post Month`, col = Paid )) + geom_histogram()
 
-Just using total likes as a base for getting paid from either: comment, like or share.
-plot(capstone$`Page total likes`,capstone$comment, col = capstone$Paid)
-plot(capstone$`Page total likes`,capstone$like, col = capstone$Paid)
-plot(capstone$`Page total likes`,capstone$share, col = capstone$Paid)
 
 ```
 
