@@ -40,12 +40,12 @@ trainTransformed <- predict(preProcValues, capstone)
 ```
 
 ```{r}
-idxTrain <- sample(seq(1,nrow(capstone), 0.70* nrow(capstone) ,replace = FALSE)) 
-idxTest <- setdiff(seq(1,nrow(capstone),idxTrain)
-trainX <- inputData[,-8][idxTrain, ]
+idxTrain <- sample(seq(1,nrow(capstone), 0.70* nrow(capstone)),replace = FALSE) 
+idxTest <- setdiff(seq(1,nrow(capstone),idxTrain))
+trainX <- inputData[,`Lifetime Post Consumers`][idxTrain, ]
 testX <- inputData[idxTest,-`Lifetime Post Consumers`]
-testY <- inputData[,8][idxTest]
-trainY <- inputData[,8][idxTrain]
+testY <- inputData[,`Lifetime Post Consumers`][idxTest]
+trainY <- inputData[,`Lifetime Post Consumers`][idxTrain]
 
 ```
 
