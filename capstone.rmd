@@ -35,17 +35,25 @@ Preprocessing..
 ```{r}
 library(caret)
 library(lattice)
+library(dataPreparation)
 preProcValues <- preProcess(capstone, method = c("center", "scale"))
 trainTransformed <- predict(preProcValues, capstone)
 ```
 
 ```{r}
-idxTrain <- sample(seq(1,nrow(capstone), 0.70* nrow(capstone)),replace = FALSE) 
-idxTest <- setdiff(seq(1,nrow(capstone),idxTrain))
-trainX <- inputData[,`Lifetime Post Consumers`][idxTrain, ]
-testX <- inputData[idxTest,-`Lifetime Post Consumers`]
-testY <- inputData[,`Lifetime Post Consumers`][idxTest]
-trainY <- inputData[,`Lifetime Post Consumers`][idxTrain]
+ whichAreBijection(capstone)
+```
+
+
+```{r}
+idxTrain <- sample(1:nrow(capstone), 0.70* nrow(capstone)) 
+idxTest <- setdiff(1:nrow(capstone),idxTrain)
+
+trainX <- capstone[idxTrain,-`Lifetime Post Consumers`]
+testX <- capstone[idxTest,-`Lifetime Post Consumers`]
+
+testY <- capstone[,`Lifetime Post Consumers`][idxTest]
+trainY <-capstone[,`Lifetime Post Consumers`][idxTrain]
 
 ```
 
@@ -63,10 +71,10 @@ summary(svm_model)
 ```
 
 ```{r}
-pred <- predict(svm_model, x)
-system.time(pred <- predict(svm_model, x))
+pred <- predict(svm_model, trainX)
+system.time(pred <- predict(svm_model, trainX))
 
-table(pred, y)
+table(pred, TrainY)
 ```
 
 ```{r}
