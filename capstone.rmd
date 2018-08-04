@@ -31,6 +31,13 @@ Cleaning the data, and getting rid of the NAs
 capstone <- na.omit(capstone)
 which(is.na(capstone),arr.ind = TRUE)
 ```
+Dummy code for categorical column
+```{r}
+capstone$Type <- as.numeric(capstone$Type)
+new <- dummy.code(capstone$Type)
+capstone <- data.frame(new,capstone)
+```
+
 Preprocessing..
 ```{r}
 library(caret)
@@ -40,11 +47,7 @@ preProcValues <- preProcess(capstone, method = c("center", "scale"))
 trainTransformed <- predict(preProcValues, capstone)
 ```
 
-```{r}
- whichAreBijection(capstone)
-```
-
-
+Splitting the data into train and test sets
 ```{r}
 idxTrain <- sample(1:nrow(capstone), 0.70* nrow(capstone)) 
 idxTest <- setdiff(1:nrow(capstone),idxTrain)
@@ -56,14 +59,7 @@ testY <- capstone[,`Lifetime Post Consumers`][idxTest]
 trainY <-capstone[,`Lifetime Post Consumers`][idxTrain]
 
 ```
-
-
-
-```{r}
-x <- subset(capstone, select = -`Lifetime Post Consumers`)
-y <-capstone$`Lifetime Post Consumers`
-```
-
+Support vector machine
 ```{r}
 library("e1071")
 svm_model <- svm(`Lifetime Post Consumers` ~ ., data = capstone)
@@ -72,20 +68,25 @@ summary(svm_model)
 
 ```{r}
 pred <- predict(svm_model, trainX)
+
+```
+
+```{r}
 system.time(pred <- predict(svm_model, trainX))
 
-table(pred, TrainY)
+table(pred, trainY)
+```
+
+
+```{r}
+tune_out <- tune.svm(x = trainX[, -respIdx], y = trainX[, respIdx], 
+                     gamma = 5*10^(-2:2), 
+                     cost = c(0.01, 0.1, 1, 10, 100), 
+                      kernel = "radial")
 ```
 
 ```{r}
-svm_tune <- tune(svm, train.x = x, train.y = y,
-                 kernel = "radial", ranges = list(cost =10^(-1:2), gamma = c(.5, 1, 2)))
-
-print(svm_tune)
-```
-
-```{r}
-svm_model_after_tune <- svm(`Lifetime Post Consumers` ~ ., data = capstone, kernel = "radial", cost = 1, gamma = 0.5)
+svm_model_after_tune <- svm(Lifetime.Post.Consumers ~ ., data = capstone, kernel = "radial", cost = 0.1, gamma = 0.05)
 
 summary(svm_model_after_tune)
 ```
@@ -102,11 +103,93 @@ table(pred, y)
 
 I'll be fixing this up soon.
 ```{r}
-ggplot(capstone, aes(x =`Lifetime Post Consumers`, y =`Post Weekday`, col = Paid )) + geom_histogram()
+ggplot(capstone, aes(x =Lifetime.Post.Consumers, y =Post.Weekday, col = Paid )) + geom_histogram()
 
-ggplot(capstone, aes(x =`Lifetime Post Consumers`, y =`Post Weekday`, col = Paid )) + geom_plot()
+ggplot(capstone, aes(x = Lifetime.Post.Consumers, y = Post.Weekday, col = Paid )) + geom_plot()
 
-ggplot(capstone, aes(x =`Lifetime Post Consumers`, y =`Post Month`, col = Paid )) + geom_histogram()
+ggplot(capstone, aes(x = Lifetime.Post.Consumers, y = Post.Month)) + geom_histogram()
+
+ggplot(capstone, aes(x = Post.Month, y = Lifetime.Post.Consumers, col = Paid )) + geom_point()
+
+Line plot "not great"
+ggplot(capstone), aes(x = Post.Hour, y = Lifetime.Post.Consumers )) +
+geom_line()
+
+"not great"
+ggplot(capstone, aes(x = Post.Month, y = Lifetime.Post.Consumers, col = Paid )) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+"not working"
+ggplot(capstone, aes(x = factor(Type), y = Lifetime.Post.Consumers)) + geom_histogram()
+
+ggplot(capstone, aes(x = factor(Type), y = Lifetime.Post.Consumers, col = Paid )) + geom_point()
+
+"bar plots"
+m <- ggplot(capstone, aes(x = Type, y = Lifetime.Post.Consumers))
+
+m + geom_col(fill = "skyblue")
+
+
+ggplot(capstone, aes(x = Post.Month, y = Lifetime.Post.Consumers)) + geom_col(fill = "skyblue")
+
+
+"Correlations" 
+
+cor(capstone$Lifetime.Post.Consumers, as.numeric(capstone$Type))
+[1] 0.3901763
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Post.Month)
+[1] -0.1448956
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Post.Hour)
+[1] 0.01217518
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Category)
+[1] -0.03696764
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Page.total.likes)
+[1] -0.1480213
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Paid)
+[1] 0.09460298
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Lifetime.Post.Total.Reach)
+[1] 0.4761833
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Lifetime.Post.Total.Impressions)
+[1] 0.3138492
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Lifetime.Engaged.Users)
+[1] 0.9680881
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Lifetime.Post.Consumptions)
+[1] 0.7056809
+
+> cor(capstone$Lifetime.Post.Consumers, capstone$Lifetime.Post.Impressions.by.people.who.have.liked.your.Page)
+[1] 0.2219178
+
+> cor(capstone$Lifetime.Post.Consumers,
++     capstone$Lifetime.Post.reach.by.people.who.like.your.Page)
+[1] 0.5016926
+
+> cor(capstone$Lifetime.Post.Consumers,
++     capstone$Lifetime.People.who.have.liked.your.Page.and.engaged.with.your.post)
+[1] 0.8127261
+
+> cor(capstone$Lifetime.Post.Consumers,
++     capstone$comment)
+[1] 0.3333388
+
+> cor(capstone$Lifetime.Post.Consumers,
++     capstone$like)
+[1] 0.3477776
+
+> cor(capstone$Lifetime.Post.Consumers,
++     capstone$share)
+[1] 0.3430941
+
+> cor(capstone$Lifetime.Post.Consumers,
++     capstone$Total.Interactions)
+[1] 0.3525228
+
 
 
 ```
