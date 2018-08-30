@@ -33,6 +33,7 @@ which(is.na(capstone),arr.ind = TRUE)
 ```
 Dummy code for categorical column
 ```{r}
+library(psych)
 capstone$Type <- as.numeric(capstone$Type)
 new <- dummy.code(capstone$Type)
 capstone <- data.frame(new,capstone)
